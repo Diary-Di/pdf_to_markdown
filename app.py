@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, send_file
 import pymupdf4llm
+from converter import convert_xlsx_to_markdown
 
 app = Flask(__name__)
 
@@ -17,6 +18,8 @@ OUTPUT_FOLDER.mkdir(exist_ok=True)
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE
+
+ALLOWED_EXTENSIONS = {".pdf", ".xlsx", ".xlsm"}
 
 
 @app.route("/")
@@ -30,21 +33,25 @@ def convert():
         return jsonify({"error": "No file provided."}), 400
 
     file = request.files["file"]
+    ext = Path(file.filename).suffix.lower()
 
-    if not file.filename.lower().endswith(".pdf"):
-        return jsonify({"error": "Only PDF files are supported."}), 400
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"error": "Only PDF and XLSX files are supported."}), 400
 
     # Save uploaded file with a unique name
     uid = uuid.uuid4().hex
-    input_path = UPLOAD_FOLDER / f"{uid}.pdf"
+    input_path = UPLOAD_FOLDER / f"{uid}{ext}"
     output_path = OUTPUT_FOLDER / f"{uid}.md"
     original_stem = Path(file.filename).stem
 
     file.save(str(input_path))
 
     try:
-        md_text = pymupdf4llm.to_markdown(str(input_path))
-        output_path.write_text(md_text, encoding="utf-8")
+        if ext == ".pdf":
+            md_text = pymupdf4llm.to_markdown(str(input_path))
+            output_path.write_text(md_text, encoding="utf-8")
+        else:  # .xlsx / .xlsm
+            md_text = convert_xlsx_to_markdown(str(input_path), str(output_path))
     except Exception as e:
         return jsonify({"error": f"Conversion failed: {str(e)}"}), 500
     finally:

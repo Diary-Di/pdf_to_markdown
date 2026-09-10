@@ -429,8 +429,8 @@
 
   <main>
     <div class="headline">
-      <h1>PDF to <em>Markdown</em>,<br>in one drop.</h1>
-      <p>Drop any PDF and get clean, structured Markdown back instantly.<br>No cloud upload. Runs entirely on your machine.</p>
+      <h1>PDF & XLSX to <em>Markdown</em>,<br>in one drop.</h1>
+      <p>Drop any PDF or Excel file and get clean, structured Markdown back instantly.<br>No cloud upload. Runs entirely on your machine.</p>
     </div>
 
     <!-- Drop zone -->
@@ -441,9 +441,9 @@
         <polyline points="28,46 28,28" stroke-width="2.5" stroke-linecap="round"/>
         <polyline points="22,34 28,28 34,34" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <div class="drop-label">Drop your PDF here, or <span id="browse-link">browse</span></div>
-      <div class="drop-sub">PDF files up to 50 MB</div>
-      <input type="file" id="file-input" accept=".pdf" />
+      <div class="drop-label">Drop your PDF or XLSX here, or <span id="browse-link">browse</span></div>
+      <div class="drop-sub">PDF or XLSX files up to 50 MB</div>
+      <input type="file" id="file-input" accept=".pdf,.xlsx,.xlsm" />
     </div>
 
     <!-- Selected file pill -->
@@ -503,7 +503,7 @@
 
       <div class="result-actions">
         <button class="btn-download" id="btn-download">Download .md file</button>
-        <button class="btn-reset" id="btn-reset">Convert another PDF</button>
+        <button class="btn-reset" id="btn-reset">Convert another file</button>
       </div>
     </div>
   </main>
@@ -543,8 +543,10 @@
     }
 
     function setFile(file) {
-      if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-        showError('Only PDF files are supported.');
+      const name = file ? file.name.toLowerCase() : '';
+      const isSupported = name.endsWith('.pdf') || name.endsWith('.xlsx') || name.endsWith('.xlsm');
+      if (!file || !isSupported) {
+        showError('Only PDF and XLSX files are supported.');
         return;
       }
       selectedFile = file;
